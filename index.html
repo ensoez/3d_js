@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D</title>
+  <style>
+    body { margin: 0; }
+    canvas { display: block; }
+    .button-container {
+      position: absolute;
+      top: 80%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #ff5733;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .button-container {
+        top: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<script src="https://threejs.org/build/three.js"></script>
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    let currentGeometry = new THREE.BoxGeometry();
+    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    const cube = new THREE.Mesh(currentGeometry, material);
+    scene.add(cube);
+
+    // Создание проволочной геометрии
+    const wireframeGeometry = new THREE.WireframeGeometry(currentGeometry);
+    const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x0000ff });
+    const wireframe = new THREE.LineSegments(wireframeGeometry, wireframeMaterial);
+    cube.add(wireframe);
+
+    // Установка камеры
+    camera.position.z = 5;
+
+    // Добавление освещения
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1).normalize();
+    scene.add(directionalLight);
+
+    // Добавление обработчика изменения размеров окна
+    window.addEventListener('resize', () => {
+        const newWidth = window.innerWidth;
+        const newHeight = window.innerHeight;
+
+        camera.aspect = newWidth / newHeight;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(newWidth, newHeight);
+    });
+
+    // Функция для изменения цвета куба
+    function changeColor() {
+        const newColor = new THREE.Color(Math.random(), Math.random(), Math.random());
+        cube.material.color = newColor;
+    }
+
+    function changeShape(shape) {
+        scene.remove(cube);
+
+        if (shape === 'cube') {
+            currentGeometry = new THREE.BoxGeometry();
+        } else if (shape === 'triangle') {
+            currentGeometry = new THREE.ConeGeometry(1, 1, 4);
+        } else if (shape === 'sphere') {
+            currentGeometry = new THREE.SphereGeometry(1, 32, 32);
+        }
+
+        cube.geometry = currentGeometry;
+        updateWireframe();
+        scene.add(cube);
+    }
+
+    function updateWireframe() {
+        cube.remove(wireframe);
+        const newWireframeGeometry = new THREE.WireframeGeometry(currentGeometry);
+        wireframe.geometry = newWireframeGeometry;
+        cube.add(wireframe);
+    }
+
+    // Создание анимации
+    const animate = () => {
+        requestAnimationFrame(animate);
+
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+
+        renderer.render(scene, camera);
+    };
+
+    animate();
+</script>
+
+<div class="button-container">
+    <button onclick="changeColor()">Изменить цвет</button>
+    <button onclick="changeShape('cube')">Куб</button>
+    <button onclick="changeShape('triangle')">Пирамида</button>
+    <button onclick="changeShape('sphere')">Сфера</button>
+</div>
+
+</body>
+</html>
